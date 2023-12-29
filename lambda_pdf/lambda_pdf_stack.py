@@ -1,6 +1,7 @@
 from aws_cdk import (
     Duration,
     Stack,
+    BundlingOptions,
 )
 from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_lambda as lambda_
@@ -19,17 +20,25 @@ class LambdaPdfStack(Stack):
         thumbnail_function = lambda_.Function(
             self,
             "MyFirstLambda",
-            runtime=lambda_.Runtime.PYTHON_3_7,
+            runtime=lambda_.Runtime.PYTHON_3_8,
             handler="thumbnail.handler",
             timeout=Duration.seconds(300),
-            code=lambda_.Code.from_asset('lambda'),
+            # code=lambda_.Code.from_asset('lambda'),
+            code=lambda_.Code.from_asset(
+                "lambda",
+                bundling=BundlingOptions(
+                    image=lambda_.Runtime.PYTHON_3_8.bundling_image,
+                    command=[
+                        "bash",
+                        "-c",
+                        "pip install -r requirements.txt -t /asset-output && cp -a . /asset-output",
+                    ],
+                ),
+            ),
         )
 
         # bucketにファイルが保存されたらthumbnail_functionを呼び出すトリガーを作成する
-        bucket.add_event_notification(
-            s3.EventType.OBJECT_CREATED,
-            s3n.LambdaDestination(thumbnail_function)
-        )
+        bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(thumbnail_function))
 
         # bucketの読み書き権限をthumbnail_functionに付与する
         bucket.grant_read_write(thumbnail_function)
