@@ -1,7 +1,0 @@
-version: '2'
-services:
-  app:
-    build: .
-    volumes:
-      - '.:/home/deploy'
-    command: pip install -r /home/deploy/requirements.txt -t /home/deploy/lambda/
