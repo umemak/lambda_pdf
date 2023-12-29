@@ -7,6 +7,7 @@ from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_s3_notifications as s3n
 from constructs import Construct
+import os
 
 
 class LambdaPdfStack(Stack):
@@ -16,29 +17,31 @@ class LambdaPdfStack(Stack):
         # S3バケットの作成
         bucket = s3.Bucket(self, "MyFirstBucket", versioned=True)
 
-        # lambda/thumbnail.handlerからlambda関数を作成する
         thumbnail_function = lambda_.Function(
             self,
-            "MyFirstLambda",
-            runtime=lambda_.Runtime.PYTHON_3_8,
-            handler="thumbnail.handler",
-            timeout=Duration.seconds(300),
-            # code=lambda_.Code.from_asset('lambda'),
-            code=lambda_.Code.from_asset(
-                "lambda",
-                bundling=BundlingOptions(
-                    image=lambda_.Runtime.PYTHON_3_8.bundling_image,
-                    command=[
-                        "bash",
-                        "-c",
-                        "pip install -r requirements.txt -t /asset-output && cp -a . /asset-output",
-                    ],
-                ),
+            "ThumbnailFunctionLambda",
+            code=lambda_.EcrImageCode.from_asset_image(
+                directory=os.path.join(os.path.dirname(__file__), "../lambda/thumbnail"),
             ),
+            handler=lambda_.Handler.FROM_IMAGE,
+            runtime=lambda_.Runtime.FROM_IMAGE,
+            timeout=Duration.seconds(300),
+        )
+        extract_text_function = lambda_.Function(
+            self,
+            "ExtractTextFunctionLambda",
+            code=lambda_.EcrImageCode.from_asset_image(
+                directory=os.path.join(os.path.dirname(__file__), "../lambda/extract_text"),
+            ),
+            handler=lambda_.Handler.FROM_IMAGE,
+            runtime=lambda_.Runtime.FROM_IMAGE,
+            timeout=Duration.seconds(300),
         )
 
         # bucketにファイルが保存されたらthumbnail_functionを呼び出すトリガーを作成する
-        bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(thumbnail_function))
+        # bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(thumbnail_function))
+        bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(extract_text_function))
 
-        # bucketの読み書き権限をthumbnail_functionに付与する
+        # bucketの読み書き権限をfunctionsに付与する
         bucket.grant_read_write(thumbnail_function)
+        bucket.grant_read_write(extract_text_function)

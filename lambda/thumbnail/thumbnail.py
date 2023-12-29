@@ -4,6 +4,7 @@ import boto3
 import io
 import os
 from PIL import Image
+from pdf2image import convert_from_bytes
 
 def handler(event, context):
     # S3からPDFファイルを取得
@@ -13,15 +14,12 @@ def handler(event, context):
     file_obj = s3.get_object(Bucket=bucket, Key=key)
     file_content = file_obj['Body'].read()
 
-    # PDFファイルから1ページ目を取得
-    pdf = Image.open(io.BytesIO(file_content))
-    page = pdf.pages[0]
+    pages = convert_from_bytes(file_content)
 
-    # 1ページ目をサムネイル化
-    thumbnail = page.resize((256, 256))
+    # pagesはPILのImageリストなのでbyteに変換
+    img_bytes = io.BytesIO()
+    pages[0].save(img_bytes, format='PNG')
+    img_bytes = img_bytes.getvalue()
 
-    # サムネイルをS3に保存
-    thumbnail_key = f'{key}_thumbnail.png'
-    s3.put_object(Bucket=bucket, Key=thumbnail_key, Body=io.BytesIO(thumbnail.tobytes()))
-
-    print(f'サムネイルを保存しました: {thumbnail_key}')
+    base = os.path.splitext(os.path.basename(key))[0]
+    s3.put_object(Body=img_bytes,Bucket=bucket,Key=base+'.png')
