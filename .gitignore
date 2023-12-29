@@ -12,3 +12,5 @@ cdk.out
 lambda/PIL
 lambda/Pillow-*
 lambda/Pillow.libs
+
+.vscode
