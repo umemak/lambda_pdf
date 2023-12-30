@@ -56,3 +56,11 @@ command.
  * `cdk docs`        open CDK documentation
 
 Enjoy!
+
+
+## 参考
+
+- [LambdaでS3のPDFを画像化して保存（Docker,Python） #Python - Qiita](https://qiita.com/yosiiii/items/bb7c6793b2bdd2029b95)
+- [【AWS】複数のLambdaに同条件のS3トリガーを設定したい時にハマった話 - BFT名古屋 TECH BLOG](https://bftnagoya.hateblo.jp/entry/2021/12/09/103727)
+- [StepFunctions を CDK + Typescript で構築するサンプル集 - RAKSUL TechBlog](https://techblog.raksul.com/entry/2021/12/21/stepfunctions-%25e3%2582%2592-cdk-typescript-%25e3%2581%25a7%25e6%25a7%258b%25e7%25af%2589%25e3%2581%2599%25e3%2582%258b%25e3%2582%25b5%25e3%2583%25b3%25e3%2583%2597%25e3%2583%25ab%25e9%259b%2586/)
+- [AWS CDK で S3 の PUT をトリガーに Step Functions 起動する構成を作成してみた | DevelopersIO](https://dev.classmethod.jp/articles/s3-put-trigger-stepfunctions/)
